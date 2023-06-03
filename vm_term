@@ -1,0 +1,20 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+  echo "Error: vmid not provided"
+  exit 1
+fi
+
+running_ids=$(qm list | grep running | awk '{print $1}')
+
+# Check if $1 is not one of the running VM IDs
+if ! echo "$running_ids" | grep -qw "$1"; then
+  echo "Error: Invalid VM ID or not a running VM."
+  exit 1
+fi
+
+pid=$(pgrep -f "kvm -id $1")
+vmname=$(ps -p $pid -o cmd= | grep -oP '(?<=-name )[^,]+')
+
+echo terminating vm \"$1 \($vmname\)\" with pid: $pid
+
+kill -15 $(pgrep -f "kvm -id $1")
